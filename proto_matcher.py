@@ -204,7 +204,7 @@ def compare_sigs(sig1: Signature, sig2: Signature) -> float:
 def get_matches(proto_name: str, match_sig: Signature, proto2sig_map: dict[str, Signature], proto_list: list[str]):
     threshold = options.getfloat("THRESHOLD", 0.5)
     print(f"Scoring Threshold:", colored_percent(threshold))
-    score_map: dict[str, int] = {}
+    score_map: dict[str, float] = {}
     
     for name, sig in proto2sig_map.items():
         if "." in name: continue # Skip nested types
@@ -215,7 +215,12 @@ def get_matches(proto_name: str, match_sig: Signature, proto2sig_map: dict[str, 
     if not score_map:
         return print("No matches found. :cry:")
     
-    matches_view = sorted(score_map.items(), key=lambda x: x[1] * proto_list.index(x[0]))[:options.getint("MAX_DISPLAY_MATCHES")]
+    def sort_key(tup: tuple[str, float]) -> float:
+        idx_weight = 1 -((proto_list.index(tup[0]) + 1) / len(proto_list))
+        return tup[1] + idx_weight * 0.5
+    
+    matches_sorted = sorted(score_map.items(), key=sort_key, reverse=True)
+    matches_view = matches_sorted[:options.getint("MAX_DISPLAY_MATCHES")]
     print(f"Matches for {to_proto_name(proto_name)} (showing {len(matches_view)}/{len(score_map)}):")
     for name, score in matches_view:
         place = proto_list.index(name)
