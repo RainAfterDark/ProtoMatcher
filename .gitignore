@@ -1,0 +1,7 @@
+/.vscode
+/obs_data
+/output
+
+config.ini
+proto_dumper.py
+proto_list_dumper.py
